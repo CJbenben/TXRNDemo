@@ -39,5 +39,5 @@ export default function App() {
                 Alert.alert('您选中的座位是:' + e.nativeEvent.data);
             }}
         />
-    );
+    )
 }
