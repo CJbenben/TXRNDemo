@@ -1,77 +1,43 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow strict-local
- */
 
-import 'react-native-gesture-handler';
-import * as React from 'react';
-import { View, Text, Button, TextInput } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-
-function HomeScreen({ navigation, route }) {
-  React.useEffect(() => {
-    if (route.params?.post) {
-      // Post updated, do something with `route.params.post`
-      // For example, send the post to the server
+import React from 'react';
+import { Text, View, Alert } from 'react-native';
+import {WebView} from 'react-native-webview';
+//import SplashScreen from 'react-native-splash-screen';
+//SplashScreen.hide();
+//注意换一个有空场的资源链接
+const uri = 'https://m.mtime.cn/#!/onlineticket/614532488/';
+const INJECT_JS = (window, document) => {
+    let submitBtn;
+    function waitForBtnRender() {
+        submitBtn = document.getElementById('submitBtn');
+        if (!submitBtn) {
+            //暗号：技术为生活服务
+            setTimeout(waitForBtnRender, 2000);
+        } else {
+            submitBtn.onclick = () => {
+                const seats = [];
+                document.querySelectorAll('.seat_selected').forEach((node) => {
+                    seats.push(node.getAttribute('name'));
+                });
+                window.ReactNativeWebView.postMessage(seats.join(','));
+            }
+        }
     }
-  }, [route.params?.post]);
+    waitForBtnRender();
+};
 
-  return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Button
-        title="点击跳转下一页"
-        onPress={() => navigation.navigate('Second', {
-            itemId: 86
-        })}
-      />
-      <Text style={{ margin: 10 }}>这里是第二页回传值: {route.params?.post}</Text>
-    </View>
-  );
+export default function App() {
+    return (
+        // <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        //     <Text>Home Screensssssssss2222222</Text>
+        // </View>
+        <WebView
+            style={{ flex: 1 }}
+            source={{ uri }}
+            injectedJavaScript={`(${INJECT_JS.toString()})(window,document)`}
+            onMessage={(e) => {
+                Alert.alert('您选中的座位是:' + e.nativeEvent.data);
+            }}
+        />
+    );
 }
-
-function CreatePostScreen({ navigation, route }) {
-  const [postText, setPostText] = React.useState('');
-  const { itemId } = route.params;
-  return (
-    <>
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <Text style={{fontSize:20}}>这里是第二页</Text>
-        <Text style={{fontSize:30}}>第一页传递参数: {JSON.stringify(itemId)}</Text>
-        <TextInput
-        multiline
-        placeholder="请输入回传第一页值"
-        style={{ height: 100, width: 300, padding: 10, backgroundColor: 'white' }}
-        value={postText}
-        onChangeText={setPostText}
-      />
-      
-      <Button
-        title="返回上一页并传递参数"
-        onPress={() => {
-          // Pass params back to home screen
-          navigation.navigate('First', { post: postText });
-        }}
-      />
-      </View>
-      
-    </>
-  );
-}
-
-const Stack = createStackNavigator();
-function App() {
-  return (
-    <NavigationContainer>
-      <Stack.Navigator headerMode='screen'>
-        <Stack.Screen name="First" component={HomeScreen} />
-        <Stack.Screen name="Second" component={CreatePostScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
-}
-
-export default App;
